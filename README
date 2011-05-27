@@ -1,0 +1,6 @@
+CIScreen
+
+Control your windows computer using hand gestures and kinect
+
+Required: 
+	Kinect OpenNI OpenCV
