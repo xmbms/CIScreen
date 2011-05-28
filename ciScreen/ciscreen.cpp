@@ -42,7 +42,7 @@ void CIScreen::run(){
 			pSessionManager->Update(pContext);
 			depth = kinect.getDepthImage();
 			image = kinect.getImage();
-			cvShowImage("Depth", depth);
+			//cvShowImage("Depth", depth);
 			cvShowImage("Image", image);			
 			cvWaitKey(10);
 	}

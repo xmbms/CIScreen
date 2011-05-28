@@ -53,9 +53,10 @@ void XN_CALLBACK_TYPE CIHandGesture::onHandCreate(const XnVHandPointContext *pCo
 
 }
 
-void CIHandGesture::checkContour(){
+void CIHandGesture::checkContour(XnPoint3D center){
 
 	IplImage * image = dataGenerator->getImage();
+	IplImage * depth = dataGenerator->getDepthImage();
 	vector<int> xhull; //used for pca projective
 	vector<int> yhull;
 	xhull.push_back(handCenter.x); //kinect detected center always near to the finger
@@ -81,7 +82,15 @@ void CIHandGesture::checkContour(){
             }
 		}  
 		//detect  defects
-		//pSeqDefect = cvConvexityDefects(contour, pSeqHull, dstorage);  
+		// ÂÖÀªÍ¹ÐÔÈ±ÏÝ  
+		CvSeq * pSeqDefect = cvConvexityDefects(contour, pSeqHull, ptStorage);  
+		// Í¹ÐÔÈ±ÏÝÑ­»·  
+		for (int i = 0; i < pSeqDefect->total; i++)  {  
+			    CvConvexityDefect * pDefect = (CvConvexityDefect*) cvGetSeqElem(pSeqDefect, i);  
+				cvCircle(image, *(pDefect->start), 3, cvScalar(255, 255, 0), CV_FILLED);
+				cvCircle(image, *(pDefect->end), 3, cvScalar(0, 255, 255), CV_FILLED);
+				cvCircle(image, *(pDefect->depth_point), 3, cvScalar(0, 0, 0), CV_FILLED);
+		}
     }  
 	pSeqHull = cvConvexHull2(ptSeq, 0, CV_CLOCKWISE, 0 );
 	if(pSeqHull){
@@ -129,15 +138,81 @@ void CIHandGesture::checkContour(){
 	cvProjectPCA(orgHull, avgVector,eigenVector, proHull);
 	CvSize size = cvGetSize(proHull); 
 	double flag = cvGet2D(proHull, 0, 0).val[0]; //hand center projective
+	vector<int>  fingerX;
+	vector<int>  fingerY;
 	for(int i = 1; i < size.height; i++){
 		x = cvGet2D(proHull, i, 0).val[0];
 		y = cvGet2D(proHull, i, 1).val[0];
 		if(x * flag > 0){
+			fingerX.push_back(x);
+			fingerY.push_back(y);
 			x = cvGet2D(orgHull, i, 0).val[0];
 			y = cvGet2D(orgHull, i, 1).val[0];
-			cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
+			//cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
 		}
 	}
+
+
+	if(fingerX.size()){
+		CvMat * finger  = cvCreateMat(fingerX.size() , 2, CV_32FC1);
+		CvMat * clusters = cvCreateMat(fingerX.size() , 1, CV_32SC1 );
+		for(int i = 0, len = fingerX.size(); i < len; i++){
+			cvSet2D(finger, i, 0, cvRealScalar(fingerX[i]));
+			cvSet2D(finger, i, 1, cvRealScalar(fingerY[i]));
+		}
+		cvKMeans2(finger, 5, clusters,
+                   cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 10, 1.0 ));
+		double xcenter[5] = {0};
+		double ycenter[5] = {0};
+		int counts[5] = {0};
+		int label = 0;
+		for(int i = 0; i < fingerX.size(); i++){
+			label = cvGet2D(clusters, i, 0).val[0];
+			xcenter[label] += fingerX[i]; 
+			ycenter[label] += fingerY[i];
+			counts[label] ++;
+		}
+		int fingers = 0;
+		CvMat * projective = cvCreateMat(1 , 2, CV_32FC1);
+		CvMat * result     = cvCreateMat(1 , 2, CV_32FC1);
+		XnPoint3D temp;
+		for(int i = 0; i < 5; i ++){
+			if(counts[i]){
+				xcenter[i] /= counts[i];
+				ycenter[i] /= counts[i];
+			}
+			cvSet2D(projective, 0, 0,  cvRealScalar(xcenter[i]));
+			cvSet2D(projective, 0, 1,  cvRealScalar(ycenter[i]));
+			cvBackProjectPCA(projective, avgVector, eigenVector, result);
+			x = cvGet2D(result, 0, 0).val[0];
+			y = cvGet2D(result, 0, 1).val[0];
+			cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
+			temp.X = x;
+			temp.Y = y;
+			int index = y * depth->widthStep + x;
+			//temp.Z = depth->imageData[index] * dataGenerator->getMaxDistance() / 255;
+			temp.Z = center.Z;
+			temp = dataGenerator->p2r(temp);
+			double xdiff = temp.X - center.X;
+			double ydiff = temp.Y - center.Y;
+			double zdiff = temp.Y - center.Z;
+			if(xdiff * xdiff + ydiff * ydiff>= 4000){
+				fingers ++;
+			}
+		//	console.warn("%f", xdiff * xdiff + ydiff * ydiff);
+		}
+		temp.X = handCenter.x;
+		temp.Y = handCenter.y;
+		int index = temp.Y * depth->widthStep + temp.X;
+		temp.Z = depth->imageData[index] * dataGenerator->getMaxDistance() / 255;
+		temp = dataGenerator->p2r(temp);
+		cvReleaseMat(&projective);
+		cvReleaseMat(&result);
+		cvReleaseMat(&finger);
+		cvReleaseMat(&clusters);
+		console.info("Open finger %d", fingers);
+	}
+
 
 	cvReleaseMat(&orgHull);
 	cvReleaseMat(&proHull);
@@ -151,7 +226,6 @@ void CIHandGesture::detectHand(XnPoint3D center){
 	int distThreshold = MAX_HANDSIZE * 255 / dataGenerator->getMaxDistance();
 	XnPoint3D temp(center);
 	temp = dataGenerator->r2p(temp);
-
 	handCenter.x = temp.X;
 	handCenter.y = temp.Y;
 	int centerZ = center.Z * 255 / dataGenerator->getMaxDistance();
@@ -193,17 +267,17 @@ void CIHandGesture::detectHand(XnPoint3D center){
 		for(int j = minX; j <= maxX; j++){
 			if(abs(depth->imageData[i * iStep + j] - centerZ) <= distThreshold){
 				contourImg->imageData[i * iStep + j] = 255;
-				depth->imageData[i * iStep + j] = 255;
+				//depth->imageData[i * iStep + j] = 255;
 				handX.push_back(j);
 				handY.push_back(i);
 			} else {
 				contourImg->imageData[i * iStep + j] = 0;
-				depth->imageData[i * iStep + j] = 0;
+				//depth->imageData[i * iStep + j] = 0;
 			}
 		}
 	}
 	
-	//cvShowImage("Contour", contourImg);
+	cvShowImage("Contour", contourImg);
 }
 
 void CIHandGesture::calcPCA(){
@@ -226,7 +300,7 @@ void XN_CALLBACK_TYPE CIHandGesture::onHandUpdate(const XnVHandPointContext *pCo
 	if(pHandler->dataGenerator){
 		pHandler->detectHand(pContext->ptPosition);
 		pHandler->calcPCA();
-		pHandler->checkContour();
+		pHandler->checkContour(pContext->ptPosition);
 	} else {
 		console.error("NO Generator");
 	}

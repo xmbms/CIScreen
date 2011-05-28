@@ -17,7 +17,7 @@ public:
 	CIInterface * dataGenerator;
 	void setDataGenerator(CIInterface * generator);
 	void detectHand(XnPoint3D center);
-	void checkContour();
+	void checkContour(XnPoint3D center);
 	void calcPCA();
 
 public:
