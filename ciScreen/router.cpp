@@ -43,8 +43,19 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	//hand
 	hand->setDataGenerator(dataGenerator);
 	hand->RegisterNoPoints(handler, &CIHandle::onNoHands);
-	hand->RegisterPrimaryPointUpdate(handler, &CIHandle::onPrimaryHandUpdate);
-	hand->RegisterPointUpdate(handler,&CIHandle::onHandUpdate);
+	//hand->RegisterPrimaryPointCreate(handler, &CIHandle::onPrimaryHandCreate);
+	//hand->RegisterPrimaryPointUpdate(handler, &CIHandle::onPrimaryHandUpdate);
+	//hand->RegisterPrimaryPointDestroy(handler, &CIHandle::onPrimaryHandDestroy);
+	//hand->RegisterPointUpdate(handler,&CIHandle::onHandUpdate);
+	hand->RegisterDragStart(handler, &CIHandle::onDragStart);
+	hand->RegisterDrag(handler, &CIHandle::onDrag);
+	hand->RegisterDragEnd(handler, &CIHandle::onDragEnd);
+	hand->RegisterDraw(handler, &CIHandle::onDraw);
+	hand->RegisterDrawEnd(handler, &CIHandle::onDrawEnd);
+	hand->RegisterZoom(handler, &CIHandle::onZoom);
+	hand->RegisterZoomEnd(handler, &CIHandle::onZoomEnd);
+	hand->RegisterMove(handler, &CIHandle::onMove);
+	//hand->RegisterHandClose(handler, &CIHandle::onHandClose);
 	pSessionManager->AddListener(hand);
 	
 	// Register session callbacks

@@ -1,12 +1,16 @@
 #include <XnCppWrapper.h>
 #include <XnVHandPointContext.h>
 
+#include <Windows.h>
+
 
 #include "handle.h"
 #include "debug.h"
+#include "common.h"
 
 CIHandle::CIHandle(){
 	dataGenerator = NULL;
+	mouseState = 0;
 }
 
 CIHandle::~CIHandle(){
@@ -19,42 +23,13 @@ void CIHandle::setDataGenerator(CIInterface * generator){
 
 void CIHandle::onClick(XnFloat fVelocity, XnFloat fAngle, void* cxt){
 	//push
-	console.info("Click");
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onPull(void* cxt){
 	//pull
 	console.info("Pull");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onSelect(){
-	//make a fist
-	console.info("Select");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onDrag(){
-	//move with a fist
-	console.info("Drag");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onMove(const XnVHandPointContext* pContext, void* cxt){
-	//move with open hands
-	console.info("Move");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onZoomSelect(){
-	//two hands gesture;
-	console.info("ZoomSelect");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onZoom(){
-	//zoom with two hands
-	console.info("Zoom");
-}
-
-void XN_CALLBACK_TYPE CIHandle::onZoomEnd(){
-	//zoom end
-	console.info("ZoomEnd");
 }
 
 void XN_CALLBACK_TYPE CIHandle::onWave(void* cxt){
@@ -98,15 +73,40 @@ void XN_CALLBACK_TYPE CIHandle::onSwipeRight(XnFloat fVelocity, XnFloat fAngle, 
 	console.info("Swipe Right");
 }
 
-
 void XN_CALLBACK_TYPE CIHandle::onNoHands(void* cxt){
 	console.warn("No hands");
 }
 
-void  XN_CALLBACK_TYPE CIHandle::onPrimaryHandUpdate(const XnVHandPointContext *pContext, void *ctx){
-	console.info("Primary Hand Move");
+void XN_CALLBACK_TYPE CIHandle::onDragStart(int count , void * cxt, CvPoint center){
+	SetCursorPos(center.x, center.y);	
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 }
 
-void  XN_CALLBACK_TYPE CIHandle::onHandUpdate(const XnVHandPointContext *pContext, void *ctx){
-	console.info("Hand Move");
+void XN_CALLBACK_TYPE CIHandle::onDrag(int count , void * cxt, CvPoint center){
+	SetCursorPos(center.x, center.y);	
+}
+
+void XN_CALLBACK_TYPE CIHandle::onDragEnd(int count , void * cxt, CvPoint center){
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+}
+
+void XN_CALLBACK_TYPE CIHandle::onDraw(int count , void * cxt, CvPoint center){
+	
+}
+
+
+void XN_CALLBACK_TYPE CIHandle::onDrawEnd(int count , void * cxt, CvPoint center){
+}
+
+void XN_CALLBACK_TYPE CIHandle::onZoom(int count , void * cxt, CvPoint center){
+	
+}
+
+void XN_CALLBACK_TYPE CIHandle::onZoomEnd(int count , void * cxt, CvPoint center){
+	
+}
+
+void XN_CALLBACK_TYPE CIHandle::onMove(int count , void * cxt, CvPoint center){
+	//console.info("Hand Move");
+	SetCursorPos(center.x, center.y);
 }

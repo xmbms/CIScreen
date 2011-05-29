@@ -12,15 +12,65 @@
 
 using namespace std;
 
+#define FINGER_SQUARE_SIZE 3600
+#define THUMB_SQUARE_SIZE 4000
+#define THUMB_MIN_APPERA_COUNT 5
+
 class CIHandGesture : public XnVPointControl{
 public:
-	CIInterface * dataGenerator;
+	typedef void (XN_CALLBACK_TYPE *HandGestureCB)(int count, void* pUserCxt, CvPoint center);
+	XnCallbackHandle RegisterThumbStatus(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterFingerStatus(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterDragStart(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterDrag(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterDragEnd(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterDraw(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterDrawEnd(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterZoom(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterZoomEnd(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterMove(void* UserContext, HandGestureCB pCB);
+
+
 	void setDataGenerator(CIInterface * generator);
 	void detectHand(XnPoint3D center);
 	void checkContour(XnPoint3D center);
 	void calcPCA();
+	void activeCBs();
+
+	void resetActionState();
+
+	bool isDragGesture();
+	bool isDrawGesture();
+	bool isZoomGesture();
+	bool isPrimaryHand();
+	//bool isZoomEndGesture(); //open mouse
+
+	CvPoint hand2Screen();
+
+	HandGestureCB dragStartCBs;
+	HandGestureCB dragCBs;
+	HandGestureCB dragEndCBs;
+	HandGestureCB drawCBs;
+	HandGestureCB drawEndCBs;
+	HandGestureCB zoomCBs;
+	HandGestureCB zoomEndCBs;
+	HandGestureCB moveCBs;
+	HandGestureCB thumbCBs;
+	HandGestureCB fingerCBs;
+
+	void * pDragStart;
+	void * pDrag;
+	void * pDragEnd;
+	void * pDraw;
+	void * pDrawEnd;
+	void * pZoom;
+	void * pZoomEnd;
+	void * pMove;
+	void * pThumb;
+	void * pFinger;
 
 public:
+	CIInterface * dataGenerator;
 	IplImage * contourImg;
 	CvMat *avgVector;
 	CvMat *eigenValue;
@@ -31,6 +81,9 @@ public:
 	CvSeq * pSeqHull;
 	CvMemStorage * storage;
 	CvMemStorage* ptStorage;
+	int fingerCount;
+	int thumbCount;
+	bool thumb;
 
 	vector<int> handX; //used for pca
 	vector<int> handY;
@@ -44,6 +97,12 @@ public:
 	static void XN_CALLBACK_TYPE onHandCreate(const XnVHandPointContext *pContext, void *cxt);
 	static void XN_CALLBACK_TYPE onHandUpdate(const XnVHandPointContext *pContext, void *cxt);
 	static void XN_CALLBACK_TYPE onHandDestory(XnUInt32 nID, void *cxt);
+
+private:
+	int dragState;
+	int drawState;
+	int zoomState;
+	int currentHandId;
 
 public:
 	CIHandGesture();

@@ -27,15 +27,14 @@ public:
 	
 	//hand events
 	static void XN_CALLBACK_TYPE onNoHands(void* cxt);
-	static void XN_CALLBACK_TYPE onSelect();			//make a fist
-	static void XN_CALLBACK_TYPE onDrag();				//move with a fist
-	static void XN_CALLBACK_TYPE onMove(const XnVHandPointContext* pContext, void* cxt);				//move with open hands
-	static void XN_CALLBACK_TYPE onZoomSelect();		//two hands gesture;
-	static void XN_CALLBACK_TYPE onZoom();				//zoom with two hands
-	static void XN_CALLBACK_TYPE onZoomEnd();			//zoom end
-
-	static void XN_CALLBACK_TYPE onPrimaryHandUpdate(const XnVHandPointContext *pContext, void *cxt);
-	static void XN_CALLBACK_TYPE onHandUpdate(const XnVHandPointContext *pContext, void *cxt);
+	static void XN_CALLBACK_TYPE onDragStart(int count, void * cxt, CvPoint center);				
+	static void XN_CALLBACK_TYPE onDrag(int count, void * cxt, CvPoint center);				
+	static void XN_CALLBACK_TYPE onDragEnd(int count, void * cxt, CvPoint center);				
+	static void XN_CALLBACK_TYPE onMove(int count, void * cxt, CvPoint center); //move with open hands
+	static void XN_CALLBACK_TYPE onZoom(int count, void * cxt, CvPoint center);				//zoom with two hands
+	static void XN_CALLBACK_TYPE onZoomEnd(int count, void * cxt, CvPoint center);			//zoom end
+	static void XN_CALLBACK_TYPE onDraw(int count, void * cxt, CvPoint center);
+	static void XN_CALLBACK_TYPE onDrawEnd(int count, void * cxt, CvPoint center);
 
 public:
 	CIInterface * dataGenerator;
@@ -44,6 +43,11 @@ public:
 public:
 	CIHandle();
 	~CIHandle();
+
+public:
+	int mouseState;
 };
+
+
 
 #endif

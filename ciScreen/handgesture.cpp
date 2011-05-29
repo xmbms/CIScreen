@@ -3,11 +3,13 @@
 #include <cxcore.h>
 #include <highgui.h>
 #include <vector>
+#include <Windows.h>
 
 #include "XnVPointControl.h"
 #include "ciinterface.h"
 #include "handgesture.h"
 #include "debug.h"
+#include "common.h"
 
 using namespace std;
 
@@ -29,7 +31,16 @@ CIHandGesture::CIHandGesture(){
 	orginMat = NULL;
 	storage = cvCreateMemStorage(0);
 	ptStorage = cvCreateMemStorage();
-	
+	fingerCount = 0;
+	thumbCount  = 0;
+	dragState   = 0;
+	drawState   = 0;
+	zoomState   = 0;
+	thumbCBs    = NULL;
+	fingerCBs   = NULL;
+	thumb       = false;
+	pDragStart = pDrag = pDragEnd = NULL;
+	pDraw = pDrawEnd = pZoom = pZoomEnd = NULL;
 
 	//register event hand
 	RegisterNoPoints(this, &CIHandGesture::onNoHands);
@@ -71,8 +82,7 @@ void CIHandGesture::checkContour(XnPoint3D center){
                                  sizeof(CvPoint), ptStorage );
 
 	//all the vertexs are used to calculate hand contour
-    for (; contour != NULL; contour = contour->h_next)  
-    {  
+	for (; contour != NULL; contour = contour->h_next)  {  
         pSeqHull = cvConvexHull2(contour, NULL, CV_CLOCKWISE, 0);  
 		if(pSeqHull->total > 0){
 			int hullcount = pSeqHull->total;
@@ -82,16 +92,8 @@ void CIHandGesture::checkContour(XnPoint3D center){
             }
 		}  
 		//detect  defects
-		// ÂÖÀªÍ¹ÐÔÈ±ÏÝ  
-		CvSeq * pSeqDefect = cvConvexityDefects(contour, pSeqHull, ptStorage);  
-		// Í¹ÐÔÈ±ÏÝÑ­»·  
-		for (int i = 0; i < pSeqDefect->total; i++)  {  
-			    CvConvexityDefect * pDefect = (CvConvexityDefect*) cvGetSeqElem(pSeqDefect, i);  
-				cvCircle(image, *(pDefect->start), 3, cvScalar(255, 255, 0), CV_FILLED);
-				cvCircle(image, *(pDefect->end), 3, cvScalar(0, 255, 255), CV_FILLED);
-				cvCircle(image, *(pDefect->depth_point), 3, cvScalar(0, 0, 0), CV_FILLED);
-		}
-    }  
+		//CvSeq * pSeqDefect = cvConvexityDefects(contour, pSeqHull, ptStorage);  
+	}  
 	pSeqHull = cvConvexHull2(ptSeq, 0, CV_CLOCKWISE, 0 );
 	if(pSeqHull){
 		int hullcount = pSeqHull->total;
@@ -140,19 +142,30 @@ void CIHandGesture::checkContour(XnPoint3D center){
 	double flag = cvGet2D(proHull, 0, 0).val[0]; //hand center projective
 	vector<int>  fingerX;
 	vector<int>  fingerY;
+	CvPoint thumbA;
+	thumbA.x = cvGet2D(proHull, 0, 0).val[0];
+	thumbA.y = cvGet2D(proHull, 0, 1).val[0];
 	for(int i = 1; i < size.height; i++){
 		x = cvGet2D(proHull, i, 0).val[0];
 		y = cvGet2D(proHull, i, 1).val[0];
 		if(x * flag > 0){
 			fingerX.push_back(x);
 			fingerY.push_back(y);
+			//x = cvGet2D(orgHull, i, 0).val[0];
+			//y = cvGet2D(orgHull, i, 1).val[0];
+			//cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
+		}
+		if(abs(y) > abs(thumbA.y) && (abs(y) > abs(x))){
 			x = cvGet2D(orgHull, i, 0).val[0];
 			y = cvGet2D(orgHull, i, 1).val[0];
-			//cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
+			thumbA.x = x;
+			thumbA.y = y;
 		}
 	}
 
-
+	double xdiff, ydiff, zdiff;
+	XnPoint3D temp;
+	fingerCount = 0;
 	if(fingerX.size()){
 		CvMat * finger  = cvCreateMat(fingerX.size() , 2, CV_32FC1);
 		CvMat * clusters = cvCreateMat(fingerX.size() , 1, CV_32SC1 );
@@ -172,10 +185,8 @@ void CIHandGesture::checkContour(XnPoint3D center){
 			ycenter[label] += fingerY[i];
 			counts[label] ++;
 		}
-		int fingers = 0;
 		CvMat * projective = cvCreateMat(1 , 2, CV_32FC1);
 		CvMat * result     = cvCreateMat(1 , 2, CV_32FC1);
-		XnPoint3D temp;
 		for(int i = 0; i < 5; i ++){
 			if(counts[i]){
 				xcenter[i] /= counts[i];
@@ -189,30 +200,40 @@ void CIHandGesture::checkContour(XnPoint3D center){
 			cvCircle(image, cvPoint(x, y), 5, CV_RGB(255, 0, 0), CV_FILLED);
 			temp.X = x;
 			temp.Y = y;
-			int index = y * depth->widthStep + x;
 			//temp.Z = depth->imageData[index] * dataGenerator->getMaxDistance() / 255;
 			temp.Z = center.Z;
 			temp = dataGenerator->p2r(temp);
-			double xdiff = temp.X - center.X;
-			double ydiff = temp.Y - center.Y;
-			double zdiff = temp.Y - center.Z;
-			if(xdiff * xdiff + ydiff * ydiff>= 4000){
-				fingers ++;
+			xdiff = temp.X - center.X;
+			ydiff = temp.Y - center.Y;
+			zdiff = temp.Z - center.Z;
+			if(xdiff * xdiff + ydiff * ydiff>= FINGER_SQUARE_SIZE){
+				fingerCount ++;
 			}
-		//	console.warn("%f", xdiff * xdiff + ydiff * ydiff);
 		}
-		temp.X = handCenter.x;
-		temp.Y = handCenter.y;
-		int index = temp.Y * depth->widthStep + temp.X;
-		temp.Z = depth->imageData[index] * dataGenerator->getMaxDistance() / 255;
-		temp = dataGenerator->p2r(temp);
 		cvReleaseMat(&projective);
 		cvReleaseMat(&result);
 		cvReleaseMat(&finger);
 		cvReleaseMat(&clusters);
-		console.info("Open finger %d", fingers);
+	}
+	cvCircle(image, thumbA, 10, CV_RGB(255, 0, 255), -1);
+	temp.X = thumbA.x;
+	temp.Y = thumbA.y;
+	temp.Z = center.Z;
+	temp = dataGenerator->p2r(temp);
+	xdiff = temp.X - center.X;
+	ydiff = temp.Y - center.Y;
+	zdiff = temp.Z - center.Z;
+	if(xdiff * xdiff + ydiff * ydiff>= THUMB_SQUARE_SIZE){
+		thumbCount++;
+	} else {
+		thumbCount = 0;
 	}
 
+	if(thumbCount > THUMB_MIN_APPERA_COUNT){
+		thumb = true;
+	} else {
+		thumb = false;
+	}
 
 	cvReleaseMat(&orgHull);
 	cvReleaseMat(&proHull);
@@ -297,10 +318,12 @@ void CIHandGesture::calcPCA(){
 
 void XN_CALLBACK_TYPE CIHandGesture::onHandUpdate(const XnVHandPointContext *pContext, void *ctx){
 	CIHandGesture * pHandler = (CIHandGesture *)ctx;
+	pHandler->currentHandId = pContext->nID;
 	if(pHandler->dataGenerator){
 		pHandler->detectHand(pContext->ptPosition);
 		pHandler->calcPCA();
 		pHandler->checkContour(pContext->ptPosition);
+		pHandler->activeCBs();
 	} else {
 		console.error("NO Generator");
 	}
@@ -312,4 +335,180 @@ void XN_CALLBACK_TYPE CIHandGesture::onHandDestory(XnUInt32 nID, void *cxt){
 
 void XN_CALLBACK_TYPE CIHandGesture::onNoHands(void *cxt){
 
+}
+
+// Register/Unregister for Pull event
+XnCallbackHandle CIHandGesture::RegisterThumbStatus(void* UserContext, HandGestureCB pCB){
+	pThumb = UserContext;
+	thumbCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterFingerStatus(void* UserContext, HandGestureCB pCB){
+	pFinger = UserContext;
+	fingerCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterDragStart(void* UserContext, HandGestureCB pCB){
+	pDragStart = UserContext;
+	dragStartCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterDrag(void* UserContext, HandGestureCB pCB){
+	pDrag = UserContext;
+	dragCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterDragEnd(void* UserContext, HandGestureCB pCB){
+	pDragEnd = UserContext;
+	dragEndCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterDraw(void* UserContext, HandGestureCB pCB){
+	pDraw = UserContext;
+	drawCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterDrawEnd(void* UserContext, HandGestureCB pCB){
+	pDrawEnd = UserContext;
+	drawEndCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterZoom(void* UserContext, HandGestureCB pCB){
+	pZoom = UserContext;
+	zoomCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterMove(void* UserContext, HandGestureCB pCB){
+	pMove = UserContext;
+	moveCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterZoomEnd(void* UserContext, HandGestureCB pCB){
+	pZoomEnd = UserContext;
+	zoomEndCBs = pCB;
+	return NULL;
+}
+
+
+
+
+void CIHandGesture::activeCBs(){
+	CvPoint cursor = hand2Screen();
+	bool primary = isPrimaryHand();
+	if(primary && isDragGesture()){
+		if(!dragState){
+			resetActionState();
+		}
+		if(dragStartCBs){
+			dragStartCBs(0, pDragStart, cursor);
+		}
+		dragState = 1;
+		console.warn("Drag State");
+	} else	if(primary && isDrawGesture()){
+		if(!drawState){
+			resetActionState();
+		}
+		if(drawCBs){
+			drawCBs(0, pDraw, cursor);
+		}
+		drawState = 1;
+	} else if(isZoomGesture()){
+		if(!zoomState){
+			resetActionState();
+		}
+		if(zoomCBs){
+			zoomCBs(0, pZoom, cursor);
+		}
+		zoomState = 1;
+	} else{
+		resetActionState();
+	}
+
+	if(primary && dragState){
+		dragCBs(0, pDrag, cursor);
+		return ;
+	}
+	if(primary && drawState){
+		drawCBs(0, pDrag, cursor);
+		return ;
+	}
+	if(zoomState){
+		zoomCBs(0, pZoom, cursor);
+		return ;
+	}
+	if(primary && moveCBs){
+		moveCBs(0, pMove, cursor);
+	}
+}
+
+void CIHandGesture::resetActionState(){
+	if(dragState && dragEndCBs){
+		dragEndCBs(0, pDragEnd, cvPoint(0, 0));
+	}
+
+	if(drawState && drawEndCBs){
+		drawEndCBs(0, pDrawEnd, cvPoint(0, 0));
+	}
+	
+	if(zoomState && drawEndCBs){
+		zoomEndCBs(0, pZoomEnd, cvPoint(0, 0));
+	}
+	dragState = drawState = zoomState = 0;
+}
+
+
+bool CIHandGesture::isDragGesture(){
+	if(!fingerCount && !thumb){
+		return true;
+	}
+	return false;
+}
+
+bool CIHandGesture::isDrawGesture(){
+	if(fingerCount && !thumb){
+		return true;
+	}
+	return false;
+}
+
+bool CIHandGesture::isZoomGesture(){
+	if(fingerCount && fingerCount < 3 && thumb){
+		return true;
+	}
+	return false;
+}
+
+CvPoint CIHandGesture::hand2Screen(){
+	DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN);
+	DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN);
+	CvPoint temp = cvPoint(handCenter.x, handCenter.y);
+	temp.x -= IMAGE_SCREEN_MARGIN;
+	if(temp.x < 0){
+		temp.x = 0;
+	} else if(temp.x > dwWidth - IMAGE_SCREEN_MARGIN){
+		temp.x = dwWidth - IMAGE_SCREEN_MARGIN;
+	}
+	temp.y -= IMAGE_SCREEN_MARGIN;
+	if(temp.y < 0){
+		temp.y = 0;
+	} else if(temp.y > dwHeight - IMAGE_SCREEN_MARGIN){
+		temp.y = dwHeight - IMAGE_SCREEN_MARGIN;
+	}
+	
+	temp.x = temp.x * dwWidth  / (IMAGE_WIDTH - 2 * IMAGE_SCREEN_MARGIN);
+	temp.y = temp.y * dwHeight / (IMAGE_HEIGHT - 2 * IMAGE_SCREEN_MARGIN);
+	return temp;
+}
+
+bool CIHandGesture::isPrimaryHand(){
+	return currentHandId == this->GetPrimaryID();
 }

@@ -18,5 +18,6 @@ double getPrecisionTime();
 #define IMAGE_HEIGHT  480
 #define FRAME_RATE    30
 #define MAX_DISTANCE  7000
+#define IMAGE_SCREEN_MARGIN 120
 
 #endif
