@@ -59,7 +59,7 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	pSessionManager->AddListener(hand);
 	
 	// Register session callbacks
-	pSessionManager->RegisterSession(&handler, &CIHandle::onSessionStart, &CIHandle::onSessionEnd, &CIHandle::onSessionProgress);
+	pSessionManager->RegisterSession(handler, &CIHandle::onSessionStart, &CIHandle::onSessionEnd, &CIHandle::onSessionProgress);
 	pSessionManager->AddListener(this);
 }
 

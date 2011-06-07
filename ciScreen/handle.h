@@ -4,6 +4,7 @@
 #include <XnCppWrapper.h>
 #include <XnVHandPointContext.h>
 #include "ciinterface.h"
+#include "displayer.h"
 
 class CIHandle{
 public:
@@ -38,6 +39,7 @@ public:
 
 public:
 	CIInterface * dataGenerator;
+	CIDisplayer * displayer;
 	void setDataGenerator(CIInterface * generator);
 
 public:

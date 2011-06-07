@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\Includes"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\PrimeSense\NITE\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -64,7 +64,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="openNI.lib cv210d.lib cvaux210d.lib highgui210d.lib cxcore210d.lib XnVNite_1_3_1.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\Libs;.\Bin"
+				AdditionalLibraryDirectories="&quot;C:\Program Files\PrimeSense\NITE\Lib&quot;;&quot;C:\Program Files\PrimeSense\NITE\Bin&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -187,6 +187,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\displayer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\global.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 			</File>
 			<File
 				RelativePath=".\debug.h"
+				>
+			</File>
+			<File
+				RelativePath=".\displayer.h"
 				>
 			</File>
 			<File

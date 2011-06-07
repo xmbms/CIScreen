@@ -11,6 +11,8 @@
 CIHandle::CIHandle(){
 	dataGenerator = NULL;
 	mouseState = 0;
+	displayer = CIDisplayer::getInstance();
+	displayer->show();
 }
 
 CIHandle::~CIHandle(){
@@ -39,7 +41,9 @@ void XN_CALLBACK_TYPE CIHandle::onWave(void* cxt){
 
 void XN_CALLBACK_TYPE CIHandle::onSessionStart(const XnPoint3D& ptFocusPoint, void* UserCxt){
 	//on session start
+	CIHandle * pHandler = (CIHandle *)UserCxt;
 	console.warn("Session Start");
+	pHandler->displayer->textOut("Wave Hands now.");
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSessionEnd(void* UserCxt){
@@ -66,7 +70,8 @@ void XN_CALLBACK_TYPE CIHandle::onSwipeDown(XnFloat fVelocity, XnFloat fAngle, v
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeLeft(XnFloat fVelocity, XnFloat fAngle, void* cxt){
-	console.info("Swipe Left");
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->clearScreen();
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeRight(XnFloat fVelocity, XnFloat fAngle, void* cxt){
@@ -91,7 +96,8 @@ void XN_CALLBACK_TYPE CIHandle::onDragEnd(int count , void * cxt, CvPoint center
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDraw(int count , void * cxt, CvPoint center){
-	
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->lineTo(center.x, center.y);
 }
 
 
