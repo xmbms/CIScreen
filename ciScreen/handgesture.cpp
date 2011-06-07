@@ -42,6 +42,8 @@ CIHandGesture::CIHandGesture(){
 	pDragStart = pDrag = pDragEnd = NULL;
 	pDraw = pDrawEnd = pZoom = pZoomEnd = NULL;
 
+	drawGestureCount = 0;
+
 	//register event hand
 	RegisterNoPoints(this, &CIHandGesture::onNoHands);
 	RegisterPointCreate(this, &CIHandGesture::onHandCreate);
@@ -215,7 +217,7 @@ void CIHandGesture::checkContour(XnPoint3D center){
 		cvReleaseMat(&finger);
 		cvReleaseMat(&clusters);
 	}
-	cvCircle(image, thumbA, 10, CV_RGB(255, 0, 255), -1);
+	cvCircle(image, thumbA, 5, CV_RGB(255, 0, 255), -1);
 	temp.X = thumbA.x;
 	temp.Y = thumbA.y;
 	temp.Z = center.Z;
@@ -298,7 +300,7 @@ void CIHandGesture::detectHand(XnPoint3D center){
 		}
 	}
 	
-	cvShowImage("Contour", contourImg);
+	//cvShowImage("Contour", contourImg);
 }
 
 void CIHandGesture::calcPCA(){
@@ -398,24 +400,26 @@ XnCallbackHandle CIHandGesture::RegisterZoomEnd(void* UserContext, HandGestureCB
 	return NULL;
 }
 
-
-
-
 void CIHandGesture::activeCBs(){
 	CvPoint cursor = hand2Screen();
 	bool primary = isPrimaryHand();
 	if(primary && isDragGesture()){
-		if(!dragState){
-			resetActionState();
+		if(drawState){
+			resetActionState("drawEnd");
+			drawState = 0;
+		} else {
+			if(!dragState){
+				resetActionState("drag");
+			}
+			if(dragStartCBs && dragState != 1){
+				dragStartCBs(0, pDragStart, cursor);
+			}
+			dragState = 1;
 		}
-		if(dragStartCBs){
-			dragStartCBs(0, pDragStart, cursor);
-		}
-		dragState = 1;
-		console.warn("Drag State");
+
 	} else	if(primary && isDrawGesture()){
 		if(!drawState){
-			resetActionState();
+			resetActionState("draw");
 		}
 		if(drawCBs){
 			drawCBs(0, pDraw, cursor);
@@ -423,7 +427,7 @@ void CIHandGesture::activeCBs(){
 		drawState = 1;
 	} else if(isZoomGesture()){
 		if(!zoomState){
-			resetActionState();
+			resetActionState("zoom");
 		}
 		if(zoomCBs){
 			zoomCBs(0, pZoom, cursor);
@@ -450,12 +454,12 @@ void CIHandGesture::activeCBs(){
 	}
 }
 
-void CIHandGesture::resetActionState(){
-	if(dragState && dragEndCBs){
+void CIHandGesture::resetActionState(string action){ //drag draw move zoom drawEnd
+	if(dragState && dragEndCBs && action.length()){
 		dragEndCBs(0, pDragEnd, cvPoint(0, 0));
 	}
 
-	if(drawState && drawEndCBs){
+	if(drawState && drawEndCBs && "drawEnd" == action){
 		drawEndCBs(0, pDrawEnd, cvPoint(0, 0));
 	}
 	
@@ -463,19 +467,37 @@ void CIHandGesture::resetActionState(){
 		zoomEndCBs(0, pZoomEnd, cvPoint(0, 0));
 	}
 	dragState = drawState = zoomState = 0;
+	if(action.length()){
+		if(action != "drag"){
+		
+		}
+		if(action != "draw"){
+			drawGestureCount = 0;
+		}
+		if(action != "zoom"){
+		
+		}
+	}
 }
 
 
 bool CIHandGesture::isDragGesture(){
 	if(!fingerCount && !thumb){
+		console.warn("Sure");
 		return true;
 	}
+	console.error("Not sure");
 	return false;
 }
 
 bool CIHandGesture::isDrawGesture(){
 	if(fingerCount && !thumb){
-		return true;
+		drawGestureCount ++;
+		if(drawGestureCount > DRAW_MIN_GESTURE_COUNT){
+			return true;
+		}
+	} else{
+		drawGestureCount = 0;
 	}
 	return false;
 }

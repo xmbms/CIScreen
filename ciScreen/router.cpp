@@ -29,12 +29,12 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	pull->RegisterPull(handler, &CIHandle::onPull);
 	pSessionManager->AddListener(pull);
 
-	// Swip
-	swipe->RegisterSwipeUp(handler, &CIHandle::onSwipeUp);
-	swipe->RegisterSwipeDown(handler, &CIHandle::onSwipeDown);
-	swipe->RegisterSwipeLeft(handler, &CIHandle::onSwipeLeft);
-	swipe->RegisterSwipeRight(handler, &CIHandle::onSwipeRight);
-	pSessionManager->AddListener(swipe);
+	// Swipe //unstable
+	//swipe->RegisterSwipeUp(handler, &CIHandle::onSwipeUp);
+	//swipe->RegisterSwipeDown(handler, &CIHandle::onSwipeDown);
+	//swipe->RegisterSwipeLeft(handler, &CIHandle::onSwipeLeft);
+	//swipe->RegisterSwipeRight(handler, &CIHandle::onSwipeRight);
+	//pSessionManager->AddListener(swipe);
 
 	//steady
 	steady->RegisterSteady(handler, &CIHandle::onSteady);
@@ -61,6 +61,7 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	// Register session callbacks
 	pSessionManager->RegisterSession(handler, &CIHandle::onSessionStart, &CIHandle::onSessionEnd, &CIHandle::onSessionProgress);
 	pSessionManager->AddListener(this);
+	handler->onSessionInit();
 }
 
 XnVWaveDetector   * CIFlowRouter:: wave   = new XnVWaveDetector();

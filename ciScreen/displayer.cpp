@@ -23,8 +23,10 @@ CIDisplayer::CIDisplayer(){
 	m_hmemBmp = 0;
 	hFont     = CreateFont(80,0,0,0,FW_BOLD,0,0,0,0,0,0,2,0,"SYSTEM_FIXED_FONT");
 	hPen	  = CreatePen(PS_SOLID,10,RGB(255, 0, 0));
-	output	  = "CIScreen";
-	cout<<&output<<endl;
+	hlPen	  = CreatePen(PS_SOLID,10,RGB(255, 255, 0));
+	output	  = "";
+	cursorX   = 0;
+	cursorY   = 0;
 }
 
 CIDisplayer::~CIDisplayer(){
@@ -60,7 +62,7 @@ bool CIDisplayer::registerClass(){
 void CIDisplayer::instaceThread(void * vptr){
 	CIDisplayer * pDisplayer = (CIDisplayer *) vptr;
 	DWORD defStyle = WS_VISIBLE ;
-	DWORD exStyle  = WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST;// | WS_EX_TOOLWINDOW;
+	DWORD exStyle  = WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
 	DWORD dwWidth = GetSystemMetrics(SM_CXSCREEN);
 	DWORD dwHeight = GetSystemMetrics(SM_CYSCREEN);
 	pDisplayer->hWnd = ::CreateWindowEx(exStyle, "CIDisplayer class", "CIDisplayer", defStyle,
@@ -133,7 +135,8 @@ void CIDisplayer::renderScreen(){
 			::LineTo(hMemDC, xPoints[i], yPoints[i]);
 		}
 	}
-	
+	SelectObject(hMemDC, hlPen);
+	::Ellipse(hMemDC, cursorX, cursorY, cursorX + 20, cursorY + 20);	
 	::UpdateLayeredWindow(hWnd, hdcScreen, &ptWinPos, &sizeWindow, hMemDC, &ptSrc,0, &Blend, 1);
 	ReleaseDC(hWnd, hDc);
 	ReleaseDC(hWnd, hMemDC);
@@ -149,7 +152,6 @@ void CIDisplayer::clearScreen(){
 }
 
 void CIDisplayer::textOut(string str){
-	cout<<&output<<endl;
 	output = str;
 	renderScreen();
 }
@@ -161,5 +163,13 @@ bool CIDisplayer::lineTo(int x, int y){
 	return true;
 }
 
+
+void CIDisplayer::setCursorPos(int x, int y, bool draw){
+	cursorX = x;
+	cursorY = y;
+	if(draw){
+		renderScreen();
+	}
+}
 
 CIDisplayer * CIDisplayer::instance = 0;

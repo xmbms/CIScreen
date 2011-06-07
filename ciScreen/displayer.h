@@ -9,9 +9,10 @@ using namespace std;
 class CIDisplayer{
 public:
 	void show();
-	void textOut(string str);
+	void textOut(string str = "");
 	bool lineTo(int x, int y);
 	static CIDisplayer * getInstance();
+	void setCursorPos(int x, int y, bool draw = true);
 	void renderScreen();
 	void clearScreen();
 
@@ -31,6 +32,9 @@ private:
 	BYTE*	m_pBits;
 	HFONT	hFont;
 	HPEN	hPen;
+	HPEN	hlPen;
+	int     cursorX;
+	int     cursorY;
 };
 
 #endif

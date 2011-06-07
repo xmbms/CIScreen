@@ -12,9 +12,10 @@
 
 using namespace std;
 
-#define FINGER_SQUARE_SIZE 3600
-#define THUMB_SQUARE_SIZE 4000
+#define FINGER_SQUARE_SIZE     3600
+#define THUMB_SQUARE_SIZE	   4000
 #define THUMB_MIN_APPERA_COUNT 5
+#define DRAW_MIN_GESTURE_COUNT 5
 
 class CIHandGesture : public XnVPointControl{
 public:
@@ -37,7 +38,7 @@ public:
 	void calcPCA();
 	void activeCBs();
 
-	void resetActionState();
+	void resetActionState(string action = "");
 
 	bool isDragGesture();
 	bool isDrawGesture();
@@ -102,6 +103,8 @@ private:
 	int dragState;
 	int drawState;
 	int zoomState;
+
+	int drawGestureCount;
 	int currentHandId;
 
 public:

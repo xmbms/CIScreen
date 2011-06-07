@@ -41,6 +41,10 @@ public:
 	CIInterface * dataGenerator;
 	CIDisplayer * displayer;
 	void setDataGenerator(CIInterface * generator);
+	void onSessionInit();
+	HWND dragWnd;
+	POINT dragPt; 
+	RECT  dragWndRect;
 
 public:
 	CIHandle();
