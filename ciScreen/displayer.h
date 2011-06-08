@@ -3,7 +3,8 @@
 
 #include <Windows.h>
 #include <vector>
-
+#include <map>
+#include <cv.h>
 using namespace std;
 
 class CIDisplayer{
@@ -15,6 +16,7 @@ public:
 	void setCursorPos(int x, int y, bool draw = true);
 	void renderScreen();
 	void clearScreen();
+	void addZoomPoint(int nID, int x, int y);
 
 public:
 	~CIDisplayer();
@@ -25,6 +27,7 @@ private:
 	static CIDisplayer * instance; //TODO: auto memory collection
 	vector<int> xPoints;
 	vector<int> yPoints;
+	map<int, CvPoint> zoomRect;
 	string output;
 	CIDisplayer();
 	HWND	hWnd;

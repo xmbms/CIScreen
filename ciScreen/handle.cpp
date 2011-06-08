@@ -8,12 +8,15 @@
 #include "debug.h"
 #include "common.h"
 
+#undef ENABLE_DRAG
+
 CIHandle::CIHandle(){
 	dataGenerator = NULL;
 	mouseState = 0;
 	displayer = CIDisplayer::getInstance();
 	displayer->show();
 	dragWnd = NULL;
+	drawState = 0;
 }
 
 CIHandle::~CIHandle(){
@@ -61,23 +64,33 @@ void XN_CALLBACK_TYPE CIHandle::onSteady(XnUInt32 nId, XnFloat fVelocity, void* 
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeUp(XnFloat fVelocity, XnFloat fAngle, void* cxt){
-	console.info("Swipe Up");
+	keybd_event(VK_F5, 0, 0, 0);
+	keybd_event(VK_F5, 0, KEYEVENTF_KEYUP, 0);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeDown(XnFloat fVelocity, XnFloat fAngle, void* cxt){
-	console.info("Swipe Down");
+	keybd_event(VK_ESCAPE, 0, 0, 0);
+	keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeLeft(XnFloat fVelocity, XnFloat fAngle, void* cxt){
 	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->clearScreen();
-	console.info("Swipe");
+	//if(pHandler->drawState){
+		CIHandle::onDrawEnd(0 , cxt, cvPoint(0, 0));
+	//} else {
+		keybd_event(VK_LEFT, 0, 0, 0);
+		keybd_event(VK_LEFT, 0, KEYEVENTF_KEYUP, 0);
+	//}
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeRight(XnFloat fVelocity, XnFloat fAngle, void* cxt){
 	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->clearScreen();
-	console.info("Swpie");
+	//if(pHandler->drawState){
+		CIHandle::onDrawEnd(0 , cxt, cvPoint(0, 0));
+	//} else {
+		keybd_event(VK_RIGHT, 0, 0, 0);
+		keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
+	//}
 }
 
 void XN_CALLBACK_TYPE CIHandle::onNoHands(void* cxt){
@@ -86,37 +99,42 @@ void XN_CALLBACK_TYPE CIHandle::onNoHands(void* cxt){
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDragStart(int count , void * cxt, CvPoint center){
-	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->setCursorPos(center.x, center.y);	
-	pHandler->dragPt.x = center.x;
-	pHandler->dragPt.y = center.y;
-	pHandler->dragWnd = WindowFromPoint(pHandler->dragPt);
-	::GetWindowRect(pHandler->dragWnd, &pHandler->dragWndRect);
-	console.info("DragStart");
+	#ifdef ENABLE_DRAG
+		CIHandle * pHandler = (CIHandle *)cxt;
+		pHandler->displayer->setCursorPos(center.x, center.y);	
+		pHandler->dragPt.x = center.x;
+		pHandler->dragPt.y = center.y;
+		pHandler->dragWnd = WindowFromPoint(pHandler->dragPt);
+		pHandler->dragWnd  = GetParent(pHandler->dragWnd);
+		::GetWindowRect(pHandler->dragWnd, &pHandler->dragWndRect);
+	#endif
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDrag(int count , void * cxt, CvPoint center){
-	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->setCursorPos(center.x, center.y);	
-	if(pHandler->dragWnd){
-		::SetWindowPos(pHandler->dragWnd,0,  
-			pHandler->dragWndRect.left + center.x - pHandler->dragPt.x,
-			pHandler->dragWndRect.top + center.y - pHandler->dragPt.y,
-			pHandler->dragWndRect.right - pHandler->dragWndRect.left, 
-			pHandler->dragWndRect.bottom - pHandler->dragWndRect.top, 
-			SWP_NOSIZE);
-	}
-	console.info("Drag");
+	#ifdef ENABLE_DRAG
+		CIHandle * pHandler = (CIHandle *)cxt;
+		pHandler->displayer->setCursorPos(center.x, center.y);	
+		if(pHandler->dragWnd){
+			::SetWindowPos(pHandler->dragWnd,0,  
+				pHandler->dragWndRect.left + center.x - pHandler->dragPt.x,
+				pHandler->dragWndRect.top + center.y - pHandler->dragPt.y,
+				pHandler->dragWndRect.right - pHandler->dragWndRect.left, 
+				pHandler->dragWndRect.bottom - pHandler->dragWndRect.top, 
+				SWP_NOSIZE);
+		}
+	#endif
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDragEnd(int count , void * cxt, CvPoint center){
-	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->dragWnd = NULL;
-	console.info("DragEnd");
+	#ifdef ENABLE_DRAG
+		CIHandle * pHandler = (CIHandle *)cxt;
+		pHandler->dragWnd = NULL;
+	#endif
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDraw(int count , void * cxt, CvPoint center){
 	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->drawState = 1;
 	pHandler->displayer->setCursorPos(center.x, center.y, false);
 	pHandler->displayer->lineTo(center.x, center.y);
 }
@@ -124,16 +142,17 @@ void XN_CALLBACK_TYPE CIHandle::onDraw(int count , void * cxt, CvPoint center){
 
 void XN_CALLBACK_TYPE CIHandle::onDrawEnd(int count , void * cxt, CvPoint center){
 	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->setCursorPos(center.x, center.y, false);
+	//pHandler->displayer->setCursorPos(center.x, center.y, false);
 	pHandler->displayer->clearScreen();
+	pHandler->drawState = 0;
 }
 
 void XN_CALLBACK_TYPE CIHandle::onZoom(int count , void * cxt, CvPoint center){
-	
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->addZoomPoint(count, center.x, center.y);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onZoomEnd(int count , void * cxt, CvPoint center){
-	
 }
 
 void XN_CALLBACK_TYPE CIHandle::onMove(int count , void * cxt, CvPoint center){

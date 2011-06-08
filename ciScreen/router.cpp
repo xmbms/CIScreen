@@ -30,11 +30,11 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	pSessionManager->AddListener(pull);
 
 	// Swipe //unstable
-	//swipe->RegisterSwipeUp(handler, &CIHandle::onSwipeUp);
-	//swipe->RegisterSwipeDown(handler, &CIHandle::onSwipeDown);
-	//swipe->RegisterSwipeLeft(handler, &CIHandle::onSwipeLeft);
-	//swipe->RegisterSwipeRight(handler, &CIHandle::onSwipeRight);
-	//pSessionManager->AddListener(swipe);
+	swipe->RegisterSwipeUp(handler, &CIHandle::onSwipeUp);
+	swipe->RegisterSwipeDown(handler, &CIHandle::onSwipeDown);
+	swipe->RegisterSwipeLeft(handler, &CIHandle::onSwipeLeft);
+	swipe->RegisterSwipeRight(handler, &CIHandle::onSwipeRight);
+	pSessionManager->AddListener(swipe);
 
 	//steady
 	steady->RegisterSteady(handler, &CIHandle::onSteady);

@@ -38,6 +38,8 @@ void CIScreen::run(){
 	setSessionConfig();
 	console.info("Wave hand now");
 	IplImage * depth, *image;
+	cvNamedWindow("Image", 0);
+	cvResizeWindow("Image", 320, 240);
 	while(kinect.run()){
 			pSessionManager->Update(pContext);
 			depth = kinect.getDepthImage();

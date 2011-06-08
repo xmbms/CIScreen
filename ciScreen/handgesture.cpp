@@ -325,7 +325,7 @@ void XN_CALLBACK_TYPE CIHandGesture::onHandUpdate(const XnVHandPointContext *pCo
 		pHandler->detectHand(pContext->ptPosition);
 		pHandler->calcPCA();
 		pHandler->checkContour(pContext->ptPosition);
-		pHandler->activeCBs();
+		pHandler->activeCBs(pContext->nID);
 	} else {
 		console.error("NO Generator");
 	}
@@ -400,14 +400,14 @@ XnCallbackHandle CIHandGesture::RegisterZoomEnd(void* UserContext, HandGestureCB
 	return NULL;
 }
 
-void CIHandGesture::activeCBs(){
+void CIHandGesture::activeCBs(int nID){
 	CvPoint cursor = hand2Screen();
 	bool primary = isPrimaryHand();
 	if(primary && isDragGesture()){
-		if(drawState){
-			resetActionState("drawEnd");
-			drawState = 0;
-		} else {
+		//if(drawState){
+		//	resetActionState("drawEnd");
+		//	drawState = 0;
+		//} else {
 			if(!dragState){
 				resetActionState("drag");
 			}
@@ -415,7 +415,7 @@ void CIHandGesture::activeCBs(){
 				dragStartCBs(0, pDragStart, cursor);
 			}
 			dragState = 1;
-		}
+		//}
 
 	} else	if(primary && isDrawGesture()){
 		if(!drawState){
@@ -430,7 +430,7 @@ void CIHandGesture::activeCBs(){
 			resetActionState("zoom");
 		}
 		if(zoomCBs){
-			zoomCBs(0, pZoom, cursor);
+			zoomCBs(nID, pZoom, cursor);
 		}
 		zoomState = 1;
 	} else{
@@ -446,7 +446,7 @@ void CIHandGesture::activeCBs(){
 		return ;
 	}
 	if(zoomState){
-		zoomCBs(0, pZoom, cursor);
+		zoomCBs(nID, pZoom, cursor);
 		return ;
 	}
 	if(primary && moveCBs){
@@ -459,7 +459,7 @@ void CIHandGesture::resetActionState(string action){ //drag draw move zoom drawE
 		dragEndCBs(0, pDragEnd, cvPoint(0, 0));
 	}
 
-	if(drawState && drawEndCBs && "drawEnd" == action){
+	if(drawState && drawEndCBs && action.length()){
 		drawEndCBs(0, pDrawEnd, cvPoint(0, 0));
 	}
 	
@@ -483,10 +483,8 @@ void CIHandGesture::resetActionState(string action){ //drag draw move zoom drawE
 
 bool CIHandGesture::isDragGesture(){
 	if(!fingerCount && !thumb){
-		console.warn("Sure");
 		return true;
 	}
-	console.error("Not sure");
 	return false;
 }
 

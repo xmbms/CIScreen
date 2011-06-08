@@ -52,7 +52,7 @@ bool CIDisplayer::registerClass(){
 	wcex.hInstance		= 0; //new instance
 	wcex.hIcon			= LoadIcon(NULL, MAKEINTRESOURCE(IDI_INFORMATION));
 	wcex.hCursor		= LoadCursor(NULL, IDC_CROSS);
-	wcex.hbrBackground	= (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wcex.hbrBackground	= (HBRUSH)GetStockObject(NULL_BRUSH);
 	wcex.lpszClassName  = "CIDisplayer class";
     wcex.lpszMenuName   = "CIDisplayer menu class";
 	wcex.hIconSm		= LoadIcon(NULL, MAKEINTRESOURCE(IDI_INFORMATION));;
@@ -114,7 +114,7 @@ void CIDisplayer::renderScreen(){
 	}
 
     DWORD m_dwSize=bmi.bmiHeader.biWidth * bmi.bmiHeader.biHeight * 4;
-    memset(m_pBits,0,m_dwSize);
+    memset(m_pBits, 0, m_dwSize);
 	SelectObject(hMemDC, m_hmemBmp);
 
 
@@ -135,6 +135,34 @@ void CIDisplayer::renderScreen(){
 			::LineTo(hMemDC, xPoints[i], yPoints[i]);
 		}
 	}
+	//zoom rect
+	if(zoomRect.size() == 2){
+		int left, top, right, bottom;
+		map<int, CvPoint>::iterator zoomIt = zoomRect.begin();
+		right = zoomIt->second.x;
+		bottom = zoomIt->second.y;
+		zoomIt++;
+		if(zoomIt->second.x > right){
+			left = right;
+			right = zoomIt->second.x;
+		} else{
+			left = zoomIt->second.x;
+		}
+		if(zoomIt->second.y > bottom){
+			top = bottom;
+			bottom = zoomIt->second.y;
+		} else {
+			top = zoomIt->second.y;
+		}
+		SetBkMode(hMemDC, TRANSPARENT);
+		//::Rectangle(hMemDC, left, top, right, bottom);
+		::MoveToEx(hMemDC, left, top, NULL);
+		::LineTo(hMemDC, right, top);
+		::LineTo(hMemDC, right, bottom);
+		::LineTo(hMemDC, left, bottom);
+		::LineTo(hMemDC, left, top);
+	}
+
 	SelectObject(hMemDC, hlPen);
 	::Ellipse(hMemDC, cursorX, cursorY, cursorX + 20, cursorY + 20);	
 	::UpdateLayeredWindow(hWnd, hdcScreen, &ptWinPos, &sizeWindow, hMemDC, &ptSrc,0, &Blend, 1);
@@ -148,6 +176,7 @@ void CIDisplayer::clearScreen(){
 	output = "";
 	xPoints.clear();
 	yPoints.clear();
+	zoomRect.clear();
 	renderScreen();
 }
 
@@ -170,6 +199,11 @@ void CIDisplayer::setCursorPos(int x, int y, bool draw){
 	if(draw){
 		renderScreen();
 	}
+}
+
+void CIDisplayer::addZoomPoint(int nID, int x, int y){
+	zoomRect[nID].x = x;
+	zoomRect[nID].y = y;
 }
 
 CIDisplayer * CIDisplayer::instance = 0;
