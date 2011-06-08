@@ -6,6 +6,7 @@
 #include <cxcore.h>
 #include <highgui.h>
 #include <vector>
+#include <XnVWaveDetector.h>
 
 #include "XnVPointControl.h"
 #include "ciinterface.h"

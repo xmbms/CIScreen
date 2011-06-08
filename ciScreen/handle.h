@@ -46,6 +46,7 @@ public:
 	POINT dragPt; 
 	RECT  dragWndRect;
 	int drawState;
+	int dragState;
 
 public:
 	CIHandle();

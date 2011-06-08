@@ -117,7 +117,6 @@ void CIDisplayer::renderScreen(){
     memset(m_pBits, 0, m_dwSize);
 	SelectObject(hMemDC, m_hmemBmp);
 
-
 	//text output
 	if(output.length()){
 		SetBkMode(hMemDC, TRANSPARENT);
@@ -135,6 +134,7 @@ void CIDisplayer::renderScreen(){
 			::LineTo(hMemDC, xPoints[i], yPoints[i]);
 		}
 	}
+	
 	//zoom rect
 	if(zoomRect.size() == 2){
 		int left, top, right, bottom;
@@ -161,10 +161,10 @@ void CIDisplayer::renderScreen(){
 		::LineTo(hMemDC, right, bottom);
 		::LineTo(hMemDC, left, bottom);
 		::LineTo(hMemDC, left, top);
-	}
-
+	}	
+	int radius = 14; //highlight cursor
 	SelectObject(hMemDC, hlPen);
-	::Ellipse(hMemDC, cursorX, cursorY, cursorX + 20, cursorY + 20);	
+	::Ellipse(hMemDC, cursorX, cursorY, cursorX + radius, cursorY + radius);
 	::UpdateLayeredWindow(hWnd, hdcScreen, &ptWinPos, &sizeWindow, hMemDC, &ptSrc,0, &Blend, 1);
 	ReleaseDC(hWnd, hDc);
 	ReleaseDC(hWnd, hMemDC);

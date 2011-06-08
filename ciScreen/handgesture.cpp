@@ -19,7 +19,7 @@ CIHandGesture::CIHandGesture(){
 	dataGenerator = NULL;
 
 	//storage
-	contourImg = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U,1);
+	contourImg = cvCreateImage(cvSize(IMAGE_WIDTH, IMAGE_HEIGHT), IPL_DEPTH_8U,1);
 	avgVector  = cvCreateMat(1, 2, CV_32FC1);  //two dimension data (x,y)
 	eigenValue = cvCreateMat(2, 1, CV_32FC1);
 	eigenVector= cvCreateMat(2, 2, CV_32FC1);
@@ -455,7 +455,7 @@ void CIHandGesture::activeCBs(int nID){
 }
 
 void CIHandGesture::resetActionState(string action){ //drag draw move zoom drawEnd
-	if(dragState && dragEndCBs && action.length()){
+	if(dragState && dragEndCBs){
 		dragEndCBs(0, pDragEnd, cvPoint(0, 0));
 	}
 

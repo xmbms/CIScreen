@@ -17,6 +17,7 @@ CIHandle::CIHandle(){
 	displayer->show();
 	dragWnd = NULL;
 	drawState = 0;
+	dragState = false;
 }
 
 CIHandle::~CIHandle(){
@@ -31,6 +32,8 @@ void CIHandle::onClick(XnFloat fVelocity, XnFloat fAngle, void* cxt){
 	//push
 	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
 	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->clearScreen();
 }
 
 void XN_CALLBACK_TYPE CIHandle::onPull(void* cxt){
@@ -39,6 +42,7 @@ void XN_CALLBACK_TYPE CIHandle::onPull(void* cxt){
 
 void XN_CALLBACK_TYPE CIHandle::onWave(void* cxt){
 	//wave hand
+	console.warn("wave");  //can't work caused by UpdateLayeredWindow, timeout
 }
 
 void CIHandle::onSessionInit(){
@@ -66,6 +70,8 @@ void XN_CALLBACK_TYPE CIHandle::onSteady(XnUInt32 nId, XnFloat fVelocity, void* 
 void XN_CALLBACK_TYPE CIHandle::onSwipeUp(XnFloat fVelocity, XnFloat fAngle, void* cxt){
 	keybd_event(VK_F5, 0, 0, 0);
 	keybd_event(VK_F5, 0, KEYEVENTF_KEYUP, 0);
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->clearScreen();
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeDown(XnFloat fVelocity, XnFloat fAngle, void* cxt){
@@ -78,8 +84,8 @@ void XN_CALLBACK_TYPE CIHandle::onSwipeLeft(XnFloat fVelocity, XnFloat fAngle, v
 	//if(pHandler->drawState){
 		CIHandle::onDrawEnd(0 , cxt, cvPoint(0, 0));
 	//} else {
-		keybd_event(VK_LEFT, 0, 0, 0);
-		keybd_event(VK_LEFT, 0, KEYEVENTF_KEYUP, 0);
+	//	keybd_event(VK_LEFT, 0, 0, 0);
+	//	keybd_event(VK_LEFT, 0, KEYEVENTF_KEYUP, 0);
 	//}
 }
 
@@ -88,8 +94,8 @@ void XN_CALLBACK_TYPE CIHandle::onSwipeRight(XnFloat fVelocity, XnFloat fAngle, 
 	//if(pHandler->drawState){
 		CIHandle::onDrawEnd(0 , cxt, cvPoint(0, 0));
 	//} else {
-		keybd_event(VK_RIGHT, 0, 0, 0);
-		keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
+	//	keybd_event(VK_RIGHT, 0, 0, 0);
+	//	keybd_event(VK_RIGHT, 0, KEYEVENTF_KEYUP, 0);
 	//}
 }
 
@@ -111,8 +117,13 @@ void XN_CALLBACK_TYPE CIHandle::onDragStart(int count , void * cxt, CvPoint cent
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDrag(int count , void * cxt, CvPoint center){
+	CIHandle * pHandler = (CIHandle *)cxt;
+	if(!pHandler->dragState){
+		keybd_event(VK_LEFT, 0, 0, 0);
+		keybd_event(VK_LEFT, 0, KEYEVENTF_KEYUP, 0);
+	}
+	pHandler->dragState = true;
 	#ifdef ENABLE_DRAG
-		CIHandle * pHandler = (CIHandle *)cxt;
 		pHandler->displayer->setCursorPos(center.x, center.y);	
 		if(pHandler->dragWnd){
 			::SetWindowPos(pHandler->dragWnd,0,  
@@ -126,6 +137,8 @@ void XN_CALLBACK_TYPE CIHandle::onDrag(int count , void * cxt, CvPoint center){
 }
 
 void XN_CALLBACK_TYPE CIHandle::onDragEnd(int count , void * cxt, CvPoint center){
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->dragState = false;
 	#ifdef ENABLE_DRAG
 		CIHandle * pHandler = (CIHandle *)cxt;
 		pHandler->dragWnd = NULL;
@@ -157,5 +170,5 @@ void XN_CALLBACK_TYPE CIHandle::onZoomEnd(int count , void * cxt, CvPoint center
 
 void XN_CALLBACK_TYPE CIHandle::onMove(int count , void * cxt, CvPoint center){
 	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->setCursorPos(center.x, center.y);
+	pHandler->displayer->setCursorPos(center.x, center.y, true);
 }
