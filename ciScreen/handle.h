@@ -36,6 +36,8 @@ public:
 	static void XN_CALLBACK_TYPE onZoomEnd(int count, void * cxt, CvPoint center);			//zoom end
 	static void XN_CALLBACK_TYPE onDraw(int count, void * cxt, CvPoint center);
 	static void XN_CALLBACK_TYPE onDrawEnd(int count, void * cxt, CvPoint center);
+	static void XN_CALLBACK_TYPE onFoundMultiHands(int count, void * cxt, CvPoint center);
+	static void XN_CALLBACK_TYPE onExit(int count, void * cxt, CvPoint center);
 
 public:
 	CIInterface * dataGenerator;

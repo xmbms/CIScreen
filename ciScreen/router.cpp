@@ -55,6 +55,8 @@ void CIFlowRouter::addToSession(XnVSessionManager * pSessionManager, CIInterface
 	hand->RegisterZoom(handler, &CIHandle::onZoom);
 	hand->RegisterZoomEnd(handler, &CIHandle::onZoomEnd);
 	hand->RegisterMove(handler, &CIHandle::onMove);
+	hand->RegisterFoundMultiHands(handler, &CIHandle::onFoundMultiHands);
+	hand->RegisterExit(handler, &CIHandle::onExit);
 	//hand->RegisterHandClose(handler, &CIHandle::onHandClose);
 	pSessionManager->AddListener(hand);
 	//

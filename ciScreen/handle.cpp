@@ -75,8 +75,8 @@ void XN_CALLBACK_TYPE CIHandle::onSwipeUp(XnFloat fVelocity, XnFloat fAngle, voi
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeDown(XnFloat fVelocity, XnFloat fAngle, void* cxt){
-	keybd_event(VK_ESCAPE, 0, 0, 0);
-	keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+	//keybd_event(VK_ESCAPE, 0, 0, 0);
+	//keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onSwipeLeft(XnFloat fVelocity, XnFloat fAngle, void* cxt){
@@ -162,7 +162,7 @@ void XN_CALLBACK_TYPE CIHandle::onDrawEnd(int count , void * cxt, CvPoint center
 
 void XN_CALLBACK_TYPE CIHandle::onZoom(int count , void * cxt, CvPoint center){
 	CIHandle * pHandler = (CIHandle *)cxt;
-	pHandler->displayer->addZoomPoint(count, center.x, center.y);
+	//pHandler->displayer->addZoomPoint(count, center.x, center.y);
 }
 
 void XN_CALLBACK_TYPE CIHandle::onZoomEnd(int count , void * cxt, CvPoint center){
@@ -171,4 +171,15 @@ void XN_CALLBACK_TYPE CIHandle::onZoomEnd(int count , void * cxt, CvPoint center
 void XN_CALLBACK_TYPE CIHandle::onMove(int count , void * cxt, CvPoint center){
 	CIHandle * pHandler = (CIHandle *)cxt;
 	pHandler->displayer->setCursorPos(center.x, center.y, true);
+}
+
+void XN_CALLBACK_TYPE CIHandle::onFoundMultiHands(int count, void * cxt, CvPoint center){
+	CIHandle * pHandler = (CIHandle *)cxt;
+	pHandler->displayer->textOut("Multi Hands Found");
+}
+
+void XN_CALLBACK_TYPE  CIHandle::onExit(int count, void * cxt, CvPoint center){
+	keybd_event(VK_ESCAPE, 0, 0, 0);
+	keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0);
+	exit(0);
 }

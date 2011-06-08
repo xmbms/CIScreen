@@ -31,6 +31,8 @@ public:
 	XnCallbackHandle RegisterZoom(void* UserContext, HandGestureCB pCB);
 	XnCallbackHandle RegisterZoomEnd(void* UserContext, HandGestureCB pCB);
 	XnCallbackHandle RegisterMove(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterFoundMultiHands(void* UserContext, HandGestureCB pCB);
+	XnCallbackHandle RegisterExit(void* UserContext, HandGestureCB pCB);
 
 
 	void setDataGenerator(CIInterface * generator);
@@ -59,6 +61,8 @@ public:
 	HandGestureCB moveCBs;
 	HandGestureCB thumbCBs;
 	HandGestureCB fingerCBs;
+	HandGestureCB exitCBs;
+	HandGestureCB handsCBs;
 
 	void * pDragStart;
 	void * pDrag;
@@ -70,6 +74,8 @@ public:
 	void * pMove;
 	void * pThumb;
 	void * pFinger;
+	void * pExit;
+	void * pHands;
 
 public:
 	CIInterface * dataGenerator;

@@ -400,14 +400,26 @@ XnCallbackHandle CIHandGesture::RegisterZoomEnd(void* UserContext, HandGestureCB
 	return NULL;
 }
 
+XnCallbackHandle CIHandGesture::RegisterFoundMultiHands(void* UserContext, HandGestureCB pCB){
+	pHands = UserContext;
+	handsCBs = pCB;
+	return NULL;
+}
+
+XnCallbackHandle CIHandGesture::RegisterExit(void* UserContext, HandGestureCB pCB){
+	pExit = UserContext;
+	exitCBs = pCB;
+	return NULL;
+}
+
 void CIHandGesture::activeCBs(int nID){
 	CvPoint cursor = hand2Screen();
 	bool primary = isPrimaryHand();
-	if(primary && isDragGesture()){
-		//if(drawState){
-		//	resetActionState("drawEnd");
-		//	drawState = 0;
-		//} else {
+	if(!primary && handsCBs){
+		handsCBs(0, pHands, cursor);
+	}
+	if(isDragGesture()){
+		if(primary){
 			if(!dragState){
 				resetActionState("drag");
 			}
@@ -415,8 +427,11 @@ void CIHandGesture::activeCBs(int nID){
 				dragStartCBs(0, pDragStart, cursor);
 			}
 			dragState = 1;
-		//}
-
+		} else {
+			if(exitCBs){
+				exitCBs(0, pExit,cursor);
+			}
+		}
 	} else	if(primary && isDrawGesture()){
 		if(!drawState){
 			resetActionState("draw");
