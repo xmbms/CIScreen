@@ -1,6 +1,27 @@
 CIScreen
 
-Control your windows computer using hand gestures and kinect
+Control your windows computer using hand gestures and kinect.
+More interesting presentation using hand gesture.
 
-Required: 
-	Kinect OpenNI OpenCV
+Support Hand Gesture: Move Drag Zoom Draw
+
+Required: Kinect OpenNI&&NITE OpenCV
+
+Compile && Run
+	1. install openni && nite
+		Follow the instructions in http://www.studentguru.gr/blogs/vangos/archive/2011/01/20/how-to-successfully-install-kinect-windows-openni-nite.aspx
+		If you have any problems, please read the following comments or google.
+		Make sure that openni && nite samples could run correctly.
+	2. install opencv
+		compile the source code of opencv or use the binary code.
+	3. set path
+		Add the bin, lib, include directory in the root directory of openni, nite, opencv to the project bin, lib, include path in vc project settings.
+		If you use different versions of openni, nite or opencv, you must change the lib name.
+		openni 1.1, nite 1.3.1, opencv 2.1 are employed for the current master branch.
+	4. Enable multihands tracking in nite
+		Found Nite.ini which locate in the ${NITEROOT}/Hands_*_*_*/Data and uncomment the last two lines.
+		
+If you use CIScreen to control you ppt presentation, please set the mouse focus in ppt file. 
+Details can be found in docs/CIScreent.pptx
+
+Contact me via github if you have issues, suggestions or need any help regarding this application.
