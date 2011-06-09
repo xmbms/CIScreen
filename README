@@ -15,7 +15,8 @@ Compile && Run
 	2. install opencv
 		compile the source code of opencv or use the binary code.
 	3. set path
-		Add the bin, lib, include directory in the root directory of openni, nite, opencv to the project bin, lib, include path in vc project settings.
+		Add the bin, lib, include directory in the root directory of openni, nite, opencv to 
+		the project bin, lib, include path in vc project settings.
 		If you use different versions of openni, nite or opencv, you must change the lib name.
 		openni 1.1, nite 1.3.1, opencv 2.1 are employed for the current master branch.
 	4. Enable multihands tracking in nite
